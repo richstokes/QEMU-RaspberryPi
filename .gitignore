@@ -1,0 +1,4 @@
+*.img
+*.zip
+*.dtb
+.DS_Store
