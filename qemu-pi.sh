@@ -34,12 +34,12 @@ if [ -f "$KERNEL" ]; then
     # :
 else 
     echo "⏳  $KERNEL does not exist, extracting from $IMAGE.."
-    hdiutil unmount /Volumes/boot > /dev/null 2>&1 || true
-    hdiutil mount $IMAGE > /dev/null 2>&1
+    hdiutil unmount ./raspios-mount > /dev/null 2>&1 || true
+    hdiutil mount $IMAGE -mountpoint ./raspios-mount > /dev/null 2>&1
 
     # Extract kernel8 file
-    cp /Volumes/boot/$KERNEL .
-    hdiutil unmount /Volumes/boot > /dev/null 2>&1
+    cp ./raspios-mount/$KERNEL .
+    hdiutil unmount ./raspios-mount > /dev/null 2>&1
 fi
 
 # Extract from image if dtb file not exist
@@ -48,17 +48,17 @@ if [ -f "$DTB_FILE" ]; then
     # :
 else 
     echo "⏳  $DTB_FILE does not exist, extracting from $IMAGE.."
-    hdiutil unmount /Volumes/boot > /dev/null 2>&1 || true
-    hdiutil mount $IMAGE > /dev/null
+    hdiutil unmount ./raspios-mount > /dev/null 2>&1 || true
+    hdiutil mount $IMAGE -mountpoint ./raspios-mount > /dev/null
 
     # Extract dtb file
-    cp /Volumes/boot/$DTB_FILE .
-    hdiutil unmount /Volumes/boot > /dev/null
+    cp ./raspios-mount/$DTB_FILE .
+    hdiutil unmount ./raspios-mount > /dev/null
 fi
 
 # Set image file size
 qemu-img resize $IMAGE $DISK_SIZE > /dev/null 2>&1 || true
-
+hdiutil eject /dev/disk2 # Makes sure the img file is ejected
 
 # Run 
 echo "👩🏽‍💻  Starting emulator.."
