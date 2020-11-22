@@ -58,7 +58,7 @@ fi
 
 # Set image file size
 qemu-img resize $IMAGE $DISK_SIZE > /dev/null 2>&1 || true
-hdiutil eject /dev/disk2 # Makes sure the img file is ejected
+hdiutil eject /dev/disk2 || true # Makes sure the img file is ejected, you can check this with `hdiutil info`
 
 # Run 
 echo "👩🏽‍💻  Starting emulator.."
