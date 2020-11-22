@@ -1,16 +1,17 @@
 #!/bin/bash
 set -e
-IMAGE="raspbian.img"
-DOWNLOAD="http://downloads.raspberrypi.org/raspbian/images/raspbian-2020-02-14/2020-02-13-raspbian-buster.zip"
+IMAGE="raspios.img" 
+# DOWNLOAD="http://downloads.raspberrypi.org/raspbian/images/raspbian-2020-02-14/2020-02-13-raspbian-buster.zip"
+DOWNLOAD="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2020-08-24/2020-08-20-raspios-buster-arm64-lite.zip"
 KERNEL="kernel8.img"
 DTB_FILE="bcm2710-rpi-3-b-plus.dtb"
-SSH_PORT="8022"
-DISK_SIZE="8G" # Size of SD card, must be multiple of 2
+SSH_PORT="8022" # Forward this port to port 22 inside the VM
+DISK_SIZE="4G" # Size of SD card, must be multiple of 2
 
 if uname -a | grep Darwin > /dev/null; then
     :
 else
-    echo "This script is designed to be run on MacOS"
+    echo "This script is designed to be run on MacOS 🍎"
     exit 1
 fi
 
@@ -24,10 +25,10 @@ else
     echo "⏳  $IMAGE does not exist, downloading.."
     wget -q $DOWNLOAD -O raspbian.zip
     unzip raspbian.zip
-    mv *raspbian*.img $IMAGE
+    mv *raspios*.img $IMAGE
 fi
 
-# expand image if kernel files not exist
+# Extract from image if kernel files not exist
 if [ -f "$KERNEL" ]; then
     echo "✅  $KERNEL exists"
     # :
@@ -41,7 +42,7 @@ else
     hdiutil unmount /Volumes/boot > /dev/null 2>&1
 fi
 
-# expand image if dtb file not exist
+# Extract from image if dtb file not exist
 if [ -f "$DTB_FILE" ]; then
     echo "✅  $DTB_FILE exists"
     # :
@@ -58,15 +59,17 @@ fi
 # Set image file size
 qemu-img resize $IMAGE $DISK_SIZE > /dev/null 2>&1 || true
 
+
 # Run 
 echo "👩🏽‍💻  Starting emulator.."
 echo "👩🏽‍💻  SSH Forwarded via localhost:$SSH_PORT"
 echo "👩🏽‍💻  You will need to install/enable SSHd before connecting."
-echo "👩🏽‍💻  On first boot, you probably want to run 'sudo raspi-config --expand-rootfs' to get full disk space"
+echo "👩🏽‍💻  On first boot, you probably want to run 'sudo raspi-config --expand-rootfs' to get the full $DISK_SIZE disk space"
 echo
 sleep 2
 
 qemu-system-aarch64 -m 1024 -M raspi3 -kernel "$KERNEL" \
+-accel tcg,thread=multi \
 -dtb "$DTB_FILE" -sd "$IMAGE" \
 -append "console=ttyAMA0 root=/dev/mmcblk0p2 rw rootwait rootfstype=ext4" \
 -nographic -device usb-net,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$SSH_PORT-:22
